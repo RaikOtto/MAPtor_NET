@@ -18,16 +18,18 @@ rownames(meta_info) = meta_info$Sample
 
 ##
 source("~/MAPTor_NET/Misc//Visualization_colors.R")
+vis_genes = hoxe = c("HOXA1","HOXA2","HOXA3","HOXA4","HOXA5","HOXA6","HOXA7","HOXA9","HOXA10","HOXA11","HOXA13","HOXB1","HOXB2","HOXB3","HOXB4","HOXB5","HOXB6","HOXB7","HOXB8","HOXB9","HOXB13","HOXC4","HOXC5","HOXC6","HOXC8","HOXC9","HOXC10","HOXC11","HOXC12","HOXC13","HOXD1","HOXD3","HOXD4","HOXD8","HOXD9","HOXD10","HOXD11","HOXD12","HOXD13")
+length(hoxe)
 
-
-vis_genes = c("HOXB8","HOXB9","DLX6","HOXC12","HOXA11","HOXD13","HMGA2","HOXA6","MYBL2","IGF2BP2","SH2D2A","SLC38A5","HOXD10","HOXD11","HOXC10","HOXA5","HOXA7","HOXA9","HOXA10","HOXB5","HOXB7","HAUS7","SOCS2","SLC35F3")
+#vis_genes = c("HOXB8","HOXB9","DLX6","HOXC12","HOXA11","HOXD13","HMGA2","HOXA6","MYBL2","IGF2BP2","SH2D2A","SLC38A5","HOXD10","HOXD11","HOXC10","HOXA5","HOXA7","HOXA9","HOXA10","HOXB5","HOXB7","HAUS7","SOCS2","SLC35F3")
 men1_size_vec = as.double(expr_raw["MEN1",])
 
 ### A ####
 
 meta_data = meta_info[colnames(expr_raw),]
-expr_raw_pan = expr_raw[,meta_data$Histology_Primary == "Pancreatic"]
+expr_raw_pan = expr_raw#[,meta_data$Histology_Primary == "Pancreas"]
 expr = expr_raw_pan[vis_genes,]
+dim(expr)
 
 meta_data = meta_info[colnames(expr),]
 
@@ -50,7 +52,8 @@ p = pheatmap::pheatmap(
   cluster_cols = TRUE
 )
 
-#svg("~/Downloads/Figure_3_Plot_A.svg", width = 10, height = 10)
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/Figure_3_C_39hox_correlation_all_samples_Discovery.svg", width = 10, height = 10)
+svg("~/Downloads/MAPTor-NET_plots_20_10_2022/Figure_3_C_39hox_correlation_all_samples_Validation.svg", width = 10, height = 10)
 print(p)
 dev.off()
 

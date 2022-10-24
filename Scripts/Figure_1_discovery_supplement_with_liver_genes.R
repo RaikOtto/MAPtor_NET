@@ -47,10 +47,6 @@ sad_genes = str_to_upper( as.character( genes_of_interest_hgnc_t[i,3:ncol(genes_
 sad_genes = sad_genes[sad_genes != ""]
 
 liver_genes = genes_of_interest_hgnc_t[70,3:ncol(genes_of_interest_hgnc_t)]
-sad_genes = sad_genes[!(sad_genes %in% liver_genes)]
-
-hox_genes = c("HOXA1","HOXA2","HOXA3","HOXA4","HOXA5","HOXA6","HOXA7","HOXA9","HOXA10","HOXA11","HOXA13","HOXB1","HOXB2","HOXB3","HOXB4","HOXB5","HOXB6","HOXB7","HOXB8","HOXB9","HOXB13","HOXC4","HOXC5","HOXC6","HOXC8","HOXC9","HOXC10","HOXC11","HOXC12","HOXC13","HOXD1","HOXD3","HOXD4","HOXD8","HOXD9","HOXD10","HOXD11","HOXD12","HOXD13")
-#sad_genes = hox_genes
 
 genes_of_interest_hgnc_t[i,1]
 
@@ -93,7 +89,7 @@ umap_p = umap_p + scale_color_manual( values = c("#0e1156","#006600")) ##33ACFF 
 umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())+ xlab("") + ylab("")
 umap_p = umap_p + theme_minimal() + theme(legend.position="top")
 
-svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_C_UMAP_studies.svg", width = 10, height = 10)
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_C_UMAP_studies_discovery_with_liver_genes.svg", width = 10, height = 10)
 umap_p 
 dev.off()
 
@@ -136,7 +132,7 @@ umap_p
 dev.off()
 
 
-# plot 4 net nec pca
+# plot 4 net nec umap
 
 umap_p = ggplot(
   umap_result$layout,
@@ -149,22 +145,6 @@ umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
 umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
 
 #svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_2_UMAP_net_nec_pca.svg", width = 10, height = 10)
-umap_p + theme_minimal()
-dev.off()
-
-# plot 5 tissue of origin
-
-umap_p = ggplot(
-  umap_result$layout,
-  aes(x, y))
-umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Histology_Primary) ))
-umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$Histology_Primary), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("#440154FF","#73D055FF","#1F968BFF","#39568CFF")) 
-
-umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
-umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
-
-#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_2_UMAP_histology_primary.svg", width = 10, height = 10)
 umap_p + theme_minimal()
 dev.off()
 
@@ -205,19 +185,43 @@ umap_p = umap_p  + geom_label_repel(
 umap_p + theme_minimal()
 dev.off()
 
+#####
 
 
+# plot 5 tissue of origin
 
-###############
+umap_p = ggplot(
+  umap_result$layout,
+  aes(x, y))
+umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Histology_Primary) ))
+umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$Histology_Primary), level=.5, type ="t", size=1.5)
+umap_p = umap_p + scale_color_manual( values = c("#440154FF","#73D055FF","#1F968BFF","#39568CFF")) 
 
-reduced_assigner_genes = rownames(expr)
-sad_genes
-liv_export = as.character(liver_genes)
-liv_export = liv_export[!(liv_export == "")]
+umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
+umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
 
-export_frame =data.frame(
-  "PanNETAssigner" = c(sad_genes,rep("",96)),
-  "AIZARANI_LIVER_C11_HEPATOCYTES_1" = liv_export,
-  "PanNETAssigner_reduced" = c(reduced_assigner_genes,rep("",111))
-)
-#write.table(export_frame, "~/Downloads/Gene_sets_MAPTor-NET.tsv",quote =FALSE, sep = "\t",row.names = FALSE)
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/2_UMAP_histology_primary.svg", width = 10, height = 10)
+umap_p + theme_minimal()
+dev.off()
+
+### label plot supplement discovery
+
+umap_p = ggplot(
+  umap_result$layout,
+  aes(x = x, y = y, color = meta_data$Study))
+umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Study) ))
+#umap_p = umap_p + geom_label(aes(label = meta_data$Sample, size = NULL), nudge_y = 0.0)
+umap_p = umap_p + scale_color_manual( values = c("#66FF00","#006600")) ##33ACFF ##FF4C33
+umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
+umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
+umap_p = umap_p  + geom_label_repel(
+  aes(label = meta_data$Sample, size = NULL, color = meta_data$Study),
+  arrow = arrow(length = unit(0.03, "npc"),
+                type = "closed", ends = "last"),
+  nudge_y = 1,
+  segment.size  = 0.3)
+
+svg("~/Downloads/MAPTor-NET_plots_20_10_2022/3_SM_Figure_Umap_Labels_Discovey.svg", width = 10, height = 10)
+umap_p + theme_minimal()
+dev.off()
+

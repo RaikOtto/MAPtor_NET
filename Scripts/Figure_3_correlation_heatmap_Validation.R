@@ -20,20 +20,22 @@ rownames(meta_info) = meta_info$Sample
 
 ##
 source("~/MAPTor_NET/Misc//Visualization_colors.R")
+vis_genes = hoxe = c("HOXA1","HOXA2","HOXA3","HOXA4","HOXA5","HOXA6","HOXA7","HOXA9","HOXA10","HOXA11","HOXA13","HOXB1","HOXB2","HOXB3","HOXB4","HOXB5","HOXB6","HOXB7","HOXB8","HOXB9","HOXB13","HOXC4","HOXC5","HOXC6","HOXC8","HOXC9","HOXC10","HOXC11","HOXC12","HOXC13","HOXD1","HOXD3","HOXD4","HOXD8","HOXD9","HOXD10","HOXD11","HOXD12","HOXD13")
+length(hoxe)
 
 vis_genes = c("HOXB8","HOXB9","DLX6","HOXC12","HOXA11","HOXD13","HMGA2","HOXA6","MYBL2","IGF2BP2","SH2D2A","SLC38A5","HOXD10","HOXD11","HOXC10","HOXA5","HOXA7","HOXA9","HOXA10","HOXB5","HOXB7","HAUS7","SOCS2","SLC35F3")
 
 ### A ####
 
 meta_data = meta_info[colnames(expr_raw),]
-expr_raw_pan = expr_raw[,meta_data$Histology_Primary == "Pancreatic"]
-expr = expr_raw_pan[vis_genes,]
+#expr_raw_pan = expr_raw[,meta_data$Histology_Primary == "Pancreatic"]
+expr = expr_raw[vis_genes,]
 meta_data = meta_info[colnames(expr),]
 
 meta_data$MEN1_MT = rep("Homozygous",ncol(expr))
 meta_data$MEN1_MT[meta_data$MEN1_Mut_AF < .9] = "Heterozygous"
 meta_data$MEN1_MT[meta_data$MEN1_Mut_AF < .1] = "WT"
-meta_data[,"MEN1_exp"] = as.double(expr_raw_pan["MEN1",])
+meta_data[,"MEN1_exp"] = as.double(expr_raw["MEN1",meta_data$Sample])
 
 p = pheatmap::pheatmap(
   cor(expr),
@@ -45,11 +47,11 @@ p = pheatmap::pheatmap(
   legend = FALSE,
   annotation_legend = TRUE,
   #fontsize_col = 7,
-  clustering_method = "ward.D",
+  clustering_method = "average",
   cluster_cols = TRUE
 )
 
-#svg("~/Downloads/Figure_3_Plot_C.svg", width = 10, height = 10)
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/Figure_3_C_dif_exp_hox_correlation_all_samples_Validation.svg", width = 10, height = 10)
 print(p)
 dev.off()
 

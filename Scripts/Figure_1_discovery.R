@@ -94,7 +94,7 @@ umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank()
 umap_p = umap_p + theme_minimal() + theme(legend.position="top")
 
 #svg("~/Downloads/MAPTor-NET_plots_20_10_2022/Figure_1_C_UMAP_studies.svg", width = 10, height = 10)
-umap_p 
+umap_p
 dev.off()
 
 # plot 2 gradings
@@ -136,75 +136,27 @@ umap_p
 dev.off()
 
 
-# plot 4 net nec pca
+# plot 4 net nec umap
+
+men1_colors = meta_data$MEN1
+men1_colors[ (meta_data$NET_NEC_UMAP == "NET") & (meta_data$MEN1 == 0) ] = "blue"
+men1_colors[ (meta_data$NET_NEC_UMAP == "NEC") & (meta_data$MEN1 == 0) ] = "red"
+men1_colors[ !(men1_colors %in% c("red","blue")) ] = "white"
 
 umap_p = ggplot(
   umap_result$layout,
   aes(x, y))
 umap_p = umap_p + geom_point( aes( size =4, color = as.character(meta_data$NET_NEC_UMAP) ))
 umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$NET_NEC_UMAP), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("#FF3333","#0000CC")) 
+umap_p = umap_p + geom_point( aes( size = 1, color = men1_colors )) # men 1
+umap_p = umap_p + scale_color_manual( values = c("blue","red","blue","red","white"))
 
 umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
 umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
 
-#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/2_UMAP_net_nec_pca.svg", width = 10, height = 10)
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/Figure_2_B_UMAP_net_nec_umap.svg", width = 10, height = 10)
 umap_p + theme_minimal()
 dev.off()
-
-# plot 5 tissue of origin
-
-umap_p = ggplot(
-  umap_result$layout,
-  aes(x, y))
-umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Histology_Primary) ))
-umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$Histology_Primary), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("#440154FF","#73D055FF","#1F968BFF","#39568CFF")) 
-
-umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
-umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
-
-#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/2_UMAP_histology_primary.svg", width = 10, height = 10)
-umap_p + theme_minimal()
-dev.off()
-
-# plot 5 primary metastasis
-
-umap_p = ggplot(
-  umap_result$layout,
-  aes(x, y))
-umap_p = umap_p + geom_point( aes( size =4, color = as.character(meta_data$Primary_Metastasis) ))
-umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$Primary_Metastasis), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("#333333","gray","brown")) 
-
-umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
-umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
-
-#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/2_UMAP_primary_metastasis.svg", width = 10, height = 10)
-umap_p + theme_minimal()
-dev.off()
-
-### label plot supplement discovery
-
-umap_p = ggplot(
-  umap_result$layout,
-  aes(x = x, y = y, color = meta_data$Study))
-umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Study) ))
-#umap_p = umap_p + geom_label(aes(label = meta_data$Sample, size = NULL), nudge_y = 0.0)
-umap_p = umap_p + scale_color_manual( values = c("#66FF00","#006600")) ##33ACFF ##FF4C33
-umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
-umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
-umap_p = umap_p  + geom_label_repel(
-  aes(label = meta_data$Sample, size = NULL, color = meta_data$Study),
-  arrow = arrow(length = unit(0.03, "npc"),
-  type = "closed", ends = "last"),
-  nudge_y = 1,
-  segment.size  = 0.3)
-
-svg("~/Downloads/MAPTor-NET_plots_20_10_2022/3_SM_Figure_Umap_Labels_Discovey.svg", width = 10, height = 10)
-umap_p + theme_minimal()
-dev.off()
-
 
 
 

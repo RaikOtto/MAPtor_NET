@@ -1,21 +1,17 @@
 library("stringr")
 library("umap")
 library("dplyr")
-library("viridis")
 library("grid")
+library("tibble")
 library("ggplot2")
+library("ggrepel")
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/Publication_datasets/Fröhling.S34.HGNC.DESeq2.VOOM.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/Publication_datasets/Discovery_Cohort.S64.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^(X\\.)", "")
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^(X)", "")
 expr_raw[1:5,1:5]
 dim(expr_raw)
-
-expr_raw_mki67 = read.table("~/MAPTor_NET/BAMs_new/Publication_datasets/Fröhling.S34.HGNC.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
-colnames(expr_raw_mki67) = str_replace(colnames(expr_raw), pattern = "^(X\\.)", "")
-colnames(expr_raw_mki67) = str_replace(colnames(expr_raw), pattern = "^(X)", "")
-mki67_vec = as.double(expr_raw["MKI67",])
 
 meta_info = read.table("~/MAPTor_NET//Misc/Meta_information.tsv",sep = "\t",header = T,stringsAsFactors = F)
 
@@ -29,7 +25,7 @@ no_match = match(colnames(expr_raw), meta_info$Sample, nomatch = F) == F
 meta_data = meta_info[ colnames(expr_raw), ]
 no_match
 dim(meta_data)
-table(meta_data$Primary_Metastasis)
+table(meta_data$Study)
 
 rownames(meta_data) = meta_data$Sample
 expr_raw = expr_raw[,meta_data$Sample[meta_data$Grading != ""]]
@@ -69,7 +65,7 @@ meta_data = meta_info[ colnames(expr), ]
 ## initiate umap
 
 custom.config = umap.defaults
-#custom.config$random_state = sample(1:1000,size = 1)
+custom.config$random_state = sample(1:1000,size = 1)
 custom.config$random_state = 748
 custom.config$n_components=2
 
@@ -84,85 +80,52 @@ umap_result$layout = as.data.frame(umap_result$layout)
 colnames(umap_result$layout) = c("x","y")
 custom.config$random_state # 748
 
-# plot 2 gradings
+# SM Figure 4  tissue of origin
 
-mki67_size_vec = mki67_vec + -1*min(mki67_vec)
-mki67_size_vec[32] = 3
-#mki67_size_vec = mki67_size_vec-min(mki67_size_vec) + 1
-#mki67_size_vec = mki67_size_vec / max(mki67_size_vec)
-#mki67_size_vec = mki67_size_vec*1.4
-
-umap_p = ggplot(
-  umap_result$layout,
-  aes(x, y))
-umap_p = umap_p + geom_point( aes( size = mki67_size_vec, color = as.character(meta_data$Grading) ))
-umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$Grading), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("#CCCCCC","#999999","#333333","gray")) 
-
-umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
-#umap_p = umap_p + geom_vline( xintercept=-1, size = 2, linetype = 2) + geom_hline( yintercept = -1.25, size = 2, linetype = 2)  
-umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
-
-#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/Figure_2C_UMAP_grading_validation.svg", width = 10, height = 10)
-umap_p + theme_minimal()
-dev.off()
-
-# plot 3 nec net men1
-
-
-men1_colors = meta_data$MEN1
-men1_colors[ (meta_data$NET_NEC_UMAP == "NET") & (meta_data$MEN1 == 0) ] = "blue"
-men1_colors[ (meta_data$NET_NEC_UMAP == "NEC") & (meta_data$MEN1 == 0) ] = "red"
-men1_colors[ !(men1_colors %in% c("red","blue")) ] = "white"
+dot_size = meta_data$Primary_Metastasis
+dot_size[meta_data$Primary_Metastasis == "Primary"] = 4
+dot_size[meta_data$Primary_Metastasis == "Metastasis"] = 2
+dot_size[meta_data$Primary_Metastasis == "not_specified"] = 3
+dot_size = as.integer(dot_size)
 
 umap_p = ggplot(
   umap_result$layout,
   aes(x, y))
-umap_p = umap_p + geom_point( aes( size =4, color = as.character(meta_data$NET_NEC_UMAP) ))
-umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$NET_NEC_UMAP), level=.5, type ="t", size=1.5)
-umap_p = umap_p + geom_point( aes( size = 1, color = men1_colors )) # men 1
-umap_p = umap_p + scale_color_manual( values = c("blue","red","blue","red","white"))
-
-umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
-umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
-
-#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/Figure_2_D_UMAP_net_nec_men1_validation_umap.svg", width = 10, height = 10)
-umap_p + theme_minimal()
-dev.off()
-
-# plot 5 tissue of origin
-
-umap_p = ggplot(
-  umap_result$layout,
-  aes(x, y))
-umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Histology_Primary) ))
+umap_p = umap_p + geom_point( aes( size = dot_size, color = as.character(meta_data$Histology_Primary) ))
 umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$Histology_Primary), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("#440154FF","#73D055FF","#FDE725FF","#1F968BFF","#39568CFF")) 
+umap_p = umap_p + scale_color_manual( values = c("#440154FF","#73D055FF","#1F968BFF","#39568CFF")) 
 
 umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
 umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
 
-svg("~/Downloads/MAPTor-Net_plots_22.02.2022/3_UMAP_histology_primary.svg", width = 10, height = 10)
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_2_UMAP_histology_primary_metastasis.svg", width = 10, height = 10)
 umap_p + theme_minimal()
 dev.off()
 
-# plot 5 primary metastasis
+### label plot supplement discovery
 
 umap_p = ggplot(
   umap_result$layout,
-  aes(x, y))
-umap_p = umap_p + geom_point( aes( size =4, color = as.character(meta_data$Primary_Metastasis) ))
-umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$Primary_Metastasis), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("orange","#333333","#CCCCCC")) 
-
+  aes(x = x, y = y, color = meta_data$Study))
+umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Study) ))
+#umap_p = umap_p + geom_label(aes(label = meta_data$Sample, size = NULL), nudge_y = 0.0)
+umap_p = umap_p + scale_color_manual( values = c("#66FF00","#006600")) ##33ACFF ##FF4C33
 umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
 umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
+umap_p = umap_p  + geom_label_repel(
+  aes(label = meta_data$Sample, size = NULL, color = meta_data$Study),
+  arrow = arrow(length = unit(0.03, "npc"),
+  type = "closed", ends = "last"),
+  nudge_y = 1,
+  segment.size  = 0.3)
 
-#svg("~/Downloads/MAPTor-Net_plots_22.02.2022//3_UMAP_primary_metastasis.svg", width = 10, height = 10)
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_3_SM_Figure_Umap_Labels_Discovey.svg", width = 10, height = 10)
 umap_p + theme_minimal()
 dev.off()
 
-### label plot supplement validation
+#####
+
+### label plot supplement discovery
 
 umap_p = ggplot(
   umap_result$layout,
@@ -182,3 +145,4 @@ umap_p = umap_p  + geom_label_repel(
 svg("~/Downloads/MAPTor-NET_plots_20_10_2022/3_SM_Figure_Umap_Labels_Discovey.svg", width = 10, height = 10)
 umap_p + theme_minimal()
 dev.off()
+
