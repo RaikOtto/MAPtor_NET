@@ -1,11 +1,12 @@
 library("stringr")
 library("umap")
 library("dplyr")
-library("viridis")
 library("grid")
+library("tibble")
 library("ggplot2")
+library("ggrepel")
 
-expr_raw = read.table("~/MAPTor_NET/BAMs_new/Publication_datasets/Fröhling.S34.HGNC.DESeq2.VOOM.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
+expr_raw = read.table("~/MAPTor_NET/BAMs_new/Publication_datasets/Discovery_Cohort.S64.DESeq2.tsv",sep="\t", stringsAsFactors =  F, header = T,row.names = 1)
 
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^(X\\.)", "")
 colnames(expr_raw) = str_replace(colnames(expr_raw), pattern = "^(X)", "")
@@ -24,7 +25,7 @@ no_match = match(colnames(expr_raw), meta_info$Sample, nomatch = F) == F
 meta_data = meta_info[ colnames(expr_raw), ]
 no_match
 dim(meta_data)
-table(meta_data$Primary_Metastasis)
+table(meta_data$Study)
 
 rownames(meta_data) = meta_data$Sample
 expr_raw = expr_raw[,meta_data$Sample[meta_data$Grading != ""]]
@@ -64,7 +65,7 @@ meta_data = meta_info[ colnames(expr), ]
 ## initiate umap
 
 custom.config = umap.defaults
-#custom.config$random_state = sample(1:1000,size = 1)
+custom.config$random_state = sample(1:1000,size = 1)
 custom.config$random_state = 748
 custom.config$n_components=2
 
@@ -87,13 +88,13 @@ umap_p = ggplot(
 
 umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Study) ))
 umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$Study), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("#03444d"))
+umap_p = umap_p + scale_color_manual( values = c("#0e1156","#006600")) ##33ACFF ##FF4C33
 
-umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
-umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
+umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())+ xlab("") + ylab("")
+umap_p = umap_p + theme_minimal() + theme(legend.position="top")
 
-#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/3_UMAP_studies.svg", width = 10, height = 10)
-umap_p + theme_minimal()
+svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_C_UMAP_studies.svg", width = 10, height = 10)
+umap_p 
 dev.off()
 
 # plot 2 gradings
@@ -106,39 +107,48 @@ mki67_size_vec = mki67_size_vec / max(mki67_size_vec)
 umap_p = ggplot(
   umap_result$layout,
   aes(x, y))
-umap_p = umap_p + geom_point( aes( size = mki67_size_vec, color = as.character(meta_data$Grading) ))
+umap_p = umap_p + geom_point( aes( size = mki67_size_vec, color = as.character(meta_data$Grading), shape = as.character(meta_data$Grading) ))
 umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$Grading), level=.5, type ="t", size=1.5)
 umap_p = umap_p + scale_color_manual( values = c("#CCCCCC","#999999","#333333","gray")) 
 
-umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
+umap_p = umap_p  + theme_minimal() + theme(legend.position = "top") + xlab("") + ylab("")
 #umap_p = umap_p + geom_vline( xintercept=-1, size = 2, linetype = 2) + geom_hline( yintercept = -1.25, size = 2, linetype = 2)  
 umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
 
-#svg("~/Downloads/MAPTor-Net_plots_22.02.2022/3_UMAP_grading.svg", width = 10, height = 10)
-umap_p + theme_minimal()
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_1_D_Grading.svg", width = 10, height = 10)
+umap_p
 dev.off()
 
 # plot 3 nec net
-
-color_vec = men1_size = men1_ori = as.integer(meta_data$MEN1)
-men1_size[men1_ori == 0 ] = .01
-men1_size[men1_ori == 1 ] = 2
-color_vec[ meta_data$NEC_NET == "NET"] = "blue"
-color_vec[ meta_data$NEC_NET == "NEC"] = "red"
-color_vec[ men1_ori == 1] = "white"
 
 umap_p = ggplot(
   umap_result$layout,
   aes(x, y))
 umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$NEC_NET) ))
-umap_p = umap_p + geom_point( size = men1_size,aes(  color = color_vec ))
 umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$NEC_NET), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("#0000CC","#FF3333","#0000CC","#FF3333","white")) 
+umap_p = umap_p + scale_color_manual( values = c("#CC00FF","#FF3333","#0000CC")) 
+
+umap_p = umap_p + theme_minimal() + theme(legend.position = "top") + xlab("") + ylab("")
+umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
+
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_2_UMAP_nec_net.svg", width = 10, height = 10)
+umap_p
+dev.off()
+
+
+# plot 4 net nec pca
+
+umap_p = ggplot(
+  umap_result$layout,
+  aes(x, y))
+umap_p = umap_p + geom_point( aes( size =4, color = as.character(meta_data$NET_NEC_UMAP) ))
+umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$NET_NEC_UMAP), level=.5, type ="t", size=1.5)
+umap_p = umap_p + scale_color_manual( values = c("#FF3333","#0000CC")) 
 
 umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
 umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
 
-#svg("~/Downloads/MAPTor-Net_plots_22.02.2022//3_UMAP_nec_net.svg", width = 10, height = 10)
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_2_UMAP_net_nec_pca.svg", width = 10, height = 10)
 umap_p + theme_minimal()
 dev.off()
 
@@ -149,12 +159,12 @@ umap_p = ggplot(
   aes(x, y))
 umap_p = umap_p + geom_point( aes( size = 4, color = as.character(meta_data$Histology_Primary) ))
 umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$Histology_Primary), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("#440154FF","#73D055FF","#FDE725FF","#1F968BFF","#39568CFF")) 
+umap_p = umap_p + scale_color_manual( values = c("#440154FF","#73D055FF","#1F968BFF","#39568CFF")) 
 
 umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
 umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
 
-svg("~/Downloads/MAPTor-Net_plots_22.02.2022/3_UMAP_histology_primary.svg", width = 10, height = 10)
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_2_UMAP_histology_primary.svg", width = 10, height = 10)
 umap_p + theme_minimal()
 dev.off()
 
@@ -165,16 +175,16 @@ umap_p = ggplot(
   aes(x, y))
 umap_p = umap_p + geom_point( aes( size =4, color = as.character(meta_data$Primary_Metastasis) ))
 umap_p = umap_p + stat_ellipse( linetype = 1, aes( color = meta_data$Primary_Metastasis), level=.5, type ="t", size=1.5)
-umap_p = umap_p + scale_color_manual( values = c("orange","#333333","#CCCCCC")) 
+umap_p = umap_p + scale_color_manual( values = c("#333333","gray","brown")) 
 
 umap_p = umap_p + theme(legend.position = "top") + xlab("") + ylab("")
 umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.text.y=element_blank())
 
-#svg("~/Downloads/MAPTor-Net_plots_22.02.2022//3_UMAP_primary_metastasis.svg", width = 10, height = 10)
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_2_UMAP_primary_metastasis.svg", width = 10, height = 10)
 umap_p + theme_minimal()
 dev.off()
 
-### label plot supplement validation
+### label plot supplement discovery
 
 umap_p = ggplot(
   umap_result$layout,
@@ -187,10 +197,27 @@ umap_p = umap_p + theme(axis.title.x=element_blank(),axis.text.x=element_blank()
 umap_p = umap_p  + geom_label_repel(
   aes(label = meta_data$Sample, size = NULL, color = meta_data$Study),
   arrow = arrow(length = unit(0.03, "npc"),
-                type = "closed", ends = "last"),
+  type = "closed", ends = "last"),
   nudge_y = 1,
   segment.size  = 0.3)
 
-svg("~/Downloads/MAPTor-NET_plots_20_10_2022/3_SM_Figure_Umap_Labels_Discovey.svg", width = 10, height = 10)
+#svg("~/Downloads/MAPTor-NET_plots_20_10_2022/SM_Figure_4_3_SM_Figure_Umap_Labels_Discovey.svg", width = 10, height = 10)
 umap_p + theme_minimal()
 dev.off()
+
+
+
+
+###############
+
+reduced_assigner_genes = rownames(expr)
+sad_genes
+liv_export = as.character(liver_genes)
+liv_export = liv_export[!(liv_export == "")]
+
+export_frame =data.frame(
+  "PanNETAssigner" = c(sad_genes,rep("",96)),
+  "AIZARANI_LIVER_C11_HEPATOCYTES_1" = liv_export,
+  "PanNETAssigner_reduced" = c(reduced_assigner_genes,rep("",111))
+)
+#write.table(export_frame, "~/Downloads/Gene_sets_MAPTor-NET.tsv",quote =FALSE, sep = "\t",row.names = FALSE)
